@@ -28,18 +28,6 @@ const config = {
     contentBase: path.join(__dirname, "dist"),
     compress: true,
     port: 8000,
-    proxy: {
-      '/cdn-models': {
-        target: 'https://oldschool-cdn.com',
-        changeOrigin: true,
-        pathRewrite: { '^/cdn-models': '/models' },
-        headers: {
-          'Referer': 'https://www.infernotrainer.com/',
-          'Origin': 'https://www.infernotrainer.com',
-        },
-        secure: true,
-      }
-    }
   },
   resolve: {
     extensions: [".tsx", ".ts", ".js"],

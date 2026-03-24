@@ -9,53 +9,32 @@ import {
   UnitOptions,
 } from "osrs-sdk";
 
-import { SoulreaperAxe }  from "./equipment/SoulreaperAxe";
-import { TorvaFullHelm }  from "./equipment/TorvaFullHelm";
-import { TorvaPlatebody } from "./equipment/TorvaPlatebody";
-import { TorvaPlatelegs } from "./equipment/TorvaPlatelegs";
-import { AmuletOfTorture } from "./equipment/AmuletOfTorture";
-import { UltorRing }       from "./equipment/UltorRing";
-
 /**
  * VardorvisLoadout
  *
- * Default: Soulreaper Axe + Torva — typical Awakened Vardorvis setup.
- * Gear models are loaded from oldschool-cdn.com automatically by the SDK.
+ * Only includes gear whose 3D models are confirmed working on oldschool-cdn.com.
+ * Torva + Soulreaper Axe models require a Referer header from infernotrainer.com
+ * to load — will be added once model extraction is complete.
  *
- * To swap gear later: replace any slot with a different equipment class.
- * All model files confirmed on CDN:
- *   player_soul_reaper_axe.glb  ✅
- *   player_torva_full_helm.glb  ✅
- *   player_torva_platebody.glb  ✅
- *   player_torva_platelegs.glb  ✅
- *   player_amulet_of_torture.glb ✅
- *   player_infernal_cape.glb    ✅
- *   player_ferocious_gloves.glb ✅
- *   player_primordial_boots.glb ✅
- *   player_avernic_defender.glb ✅
- *   player_ultor_ring.glb       ✅
+ * Stats/bonuses still reflect full BiS melee setup.
  */
 export class VardorvisLoadout {
 
   getLoadout(): UnitOptions {
     return {
       equipment: {
-        weapon:   new SoulreaperAxe(),
-        offhand:  new AvernicDefender(),  // offhand slot — avernic looks right with axe
-        helmet:   new TorvaFullHelm(),
-        chest:    new TorvaPlatebody(),
-        legs:     new TorvaPlatelegs(),
-        necklace: new AmuletOfTorture(),
+        // These all load fine from oldschool-cdn.com
+        offhand:  new AvernicDefender(),
         cape:     new InfernalCape(),
         gloves:   new FerociousGloves(),
         feet:     new PrimordialBoots(),
-        ring:     new UltorRing(),
+        // Torva + Soulreaper Axe + Amulet + Ring models need CDN fix
+        // Will be added back once resolved
       },
     };
   }
 
   setStats(player: Player) {
-    // Max combat stats for Vardorvis
     player.stats.attack          = 99;
     player.currentStats.attack   = 99;
     player.stats.strength        = 99;

@@ -22,19 +22,19 @@ import SidebarContent from "../sidebar.html";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-// Arena is 9x9 tiles. Vardorvis occupies center 3x3 (tiles 3-5, 3-5 within arena).
+// Arena is 9 quadrants of 3x3 tiles each = 27x27 total playable tiles.
 // We offset into the world coordinate space.
 const ARENA_OFFSET_X = 5;
 const ARENA_OFFSET_Y = 5;
-const ARENA_SIZE = 9;
+const ARENA_SIZE     = 27;  // 9 quadrants × 3 tiles = 27×27
 
-// Boss sits in center 3x3
-const BOSS_TILE_X = ARENA_OFFSET_X + 3;
-const BOSS_TILE_Y = ARENA_OFFSET_Y + 3;
+// Boss sits in the centre quadrant (quadrant 5 of 9), occupying a 3x3 area
+const BOSS_TILE_X = ARENA_OFFSET_X + 12;  // centre of 27 tiles (0-indexed)
+const BOSS_TILE_Y = ARENA_OFFSET_Y + 12;
 
-// Player starts at bottom-center of arena
-const PLAYER_START_X = ARENA_OFFSET_X + 4;
-const PLAYER_START_Y = ARENA_OFFSET_Y + 6;
+// Player starts south of centre — typical melee position
+const PLAYER_START_X = ARENA_OFFSET_X + 13;
+const PLAYER_START_Y = ARENA_OFFSET_Y + 18;
 
 // Axe formation intervals (ticks)
 const AXE_INTERVAL_NORMAL = 12;
@@ -68,14 +68,14 @@ type AxeDirEntry = {
 };
 
 const ALL_AXE_DIRECTIONS: AxeDirEntry[] = [
-  { dir: "N",  dx: 0,  dy: 1,  startX: () => randInt(1,7), startY: () => 0 },
-  { dir: "S",  dx: 0,  dy: -1, startX: () => randInt(1,7), startY: () => 8 },
-  { dir: "E",  dx: 1,  dy: 0,  startX: () => 0,            startY: () => randInt(1,7) },
-  { dir: "W",  dx: -1, dy: 0,  startX: () => 8,            startY: () => randInt(1,7) },
-  { dir: "NE", dx: 1,  dy: 1,  startX: () => randInt(0,3), startY: () => 0 },
-  { dir: "NW", dx: -1, dy: 1,  startX: () => randInt(5,8), startY: () => 0 },
-  { dir: "SE", dx: 1,  dy: -1, startX: () => randInt(0,3), startY: () => 8 },
-  { dir: "SW", dx: -1, dy: -1, startX: () => randInt(5,8), startY: () => 8 },
+  { dir: "N",  dx: 0,  dy: 1,  startX: () => randInt(1,25), startY: () => 0 },
+  { dir: "S",  dx: 0,  dy: -1, startX: () => randInt(1,25), startY: () => 26 },
+  { dir: "E",  dx: 1,  dy: 0,  startX: () => 0,             startY: () => randInt(1,25) },
+  { dir: "W",  dx: -1, dy: 0,  startX: () => 26,            startY: () => randInt(1,25) },
+  { dir: "NE", dx: 1,  dy: 1,  startX: () => randInt(0,9),  startY: () => 0 },
+  { dir: "NW", dx: -1, dy: 1,  startX: () => randInt(17,26),startY: () => 0 },
+  { dir: "SE", dx: 1,  dy: -1, startX: () => randInt(0,9),  startY: () => 26 },
+  { dir: "SW", dx: -1, dy: -1, startX: () => randInt(17,26),startY: () => 26 },
 ];
 
 function randInt(min: number, max: number): number {
@@ -323,8 +323,8 @@ export class VardorvisRegion extends Region {
     for (let i = 0; i < count; i++) {
       const ox = randInt(-2, 2);
       const oy = randInt(-2, 2);
-      const tx = Math.max(ARENA_OFFSET_X + 1, Math.min(ARENA_OFFSET_X + 7, player.location.x + ox));
-      const ty = Math.max(ARENA_OFFSET_Y + 1, Math.min(ARENA_OFFSET_Y + 7, player.location.y + oy));
+      const tx = Math.max(ARENA_OFFSET_X + 1, Math.min(ARENA_OFFSET_X + 25, player.location.x + ox));
+      const ty = Math.max(ARENA_OFFSET_Y + 1, Math.min(ARENA_OFFSET_Y + 25, player.location.y + oy));
 
       // Don't spawn in boss area (3x3 center)
       const isBossArea =

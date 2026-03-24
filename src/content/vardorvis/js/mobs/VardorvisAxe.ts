@@ -62,9 +62,8 @@ export class VardorvisAxe extends Mob {
     this.location = { x: newX, y: newY };
     this.perceivedLocation = { ...this.location };
 
-    // Remove axe when it exits the 9x9 arena bounds
-    const minX = 0, maxX = 60, minY = 0, maxY = 60; // generous bounds
-    if (newX < minX || newX > maxX || newY < minY || newY > maxY) {
+    // Remove axe when it exits the arena bounds
+    if (newX < 0 || newX > 100 || newY < 0 || newY > 100) {
       this.dying = 1;
     }
   }

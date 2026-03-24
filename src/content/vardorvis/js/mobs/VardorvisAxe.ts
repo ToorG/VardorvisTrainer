@@ -51,6 +51,24 @@ export class VardorvisAxe extends Mob {
   get color() { return "#cc4422"; }
   attackStyleForNewAttack() { return "slash"; }
 
+  // Hide HP bar — axes don't show health
+  get currentHp() { return 0; }
+  get maxHp()     { return 0; }
+
+  movementStep() {
+    // Move one tile per tick in the axe's direction
+    const newX = this.location.x + this.dx;
+    const newY = this.location.y + this.dy;
+    this.location = { x: newX, y: newY };
+    this.perceivedLocation = { ...this.location };
+
+    // Remove axe when it exits the 9x9 arena bounds
+    const minX = 0, maxX = 60, minY = 0, maxY = 60; // generous bounds
+    if (newX < minX || newX > maxX || newY < minY || newY > maxY) {
+      this.dying = 1;
+    }
+  }
+
   setStats() {
     this.stats = { attack: 0, strength: 0, defence: 0, range: 0, magic: 0, hitpoint: 1 };
     this.currentStats = JSON.parse(JSON.stringify(this.stats));

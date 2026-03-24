@@ -97,10 +97,10 @@ export class VardorvisRegion extends Region {
 
   // Tick counters for mechanic scheduling
   private tickCount = 0;
-  private lastAxeTick = -99;
-  private lastHeadTick = -99;
-  private lastSpikeTick = -99;
-  private lastStrTick = -99;
+  private lastAxeTick = 0;
+  private lastHeadTick = 0;
+  private lastSpikeTick = 0;
+  private lastStrTick = 0;
 
   getName() {
     return VardorvisSettings.awakened ? "Awakened Vardorvis" : "Vardorvis";

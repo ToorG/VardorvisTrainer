@@ -38,6 +38,7 @@ const config = {
       patterns: [
         { from: `index.html`, to: "", context: `src/` },
         { from: `index.html`, to: "colosseum.html", context: `src/` },
+        { from: `index.html`, to: "vardorvis.html", context: `src/` },
         { from: `manifest.json`, to: "", context: `src/` },
         {
           from: `assets/images/webappicon.png`,

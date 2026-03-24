@@ -5,6 +5,8 @@ import { Settings, Region, World, Viewport, MapController, TileMarker, Assets, L
 import NewRelicBrowser from "new-relic-browser";
 import { InfernoRegion } from "./content/inferno/js/InfernoRegion";
 import { InfernoSettings } from "./content/inferno/js/InfernoSettings";
+import { VardorvisRegion } from "./content/vardorvis/js/VardorvisRegion";
+import { VardorvisSettings } from "./content/vardorvis/js/VardorvisSettings";
 
 const SpecialAttackBarBackground = Assets.getAssetUrl("assets/images/attackstyles/interface/special_attack_background.png");
 
@@ -16,10 +18,12 @@ declare global {
 
 Settings.readFromStorage();
 InfernoSettings.readFromStorage();
+VardorvisSettings.readFromStorage();
 
 // Choose the region based on the URL.
 const AVAILABLE_REGIONS = {
   'inferno.html': new InfernoRegion(),
+  'vardorvis.html': new VardorvisRegion(),
 };
 const DEFAULT_REGION_PATH = 'inferno.html';
 

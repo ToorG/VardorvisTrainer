@@ -1,6 +1,6 @@
 "use strict";
 
-import { Entity, Trainer } from "osrs-sdk";
+import { BasicModel, Entity, Model, Trainer } from "osrs-sdk";
 
 export type HeadAttackType = "green" | "blue";
 
@@ -13,34 +13,34 @@ export interface HeadOptions {
 /**
  * VardorvisHead
  *
- * The detached head fires a projectile that must be blocked with the correct prayer.
  * Green projectile → Protect from Missiles
- * Blue crescent wave → Protect from Magic (awakened only)
- * At 50% HP (awakened): fires BOTH simultaneously.
+ * Blue crescent    → Protect from Magic (awakened)
+ * At 50% HP awakened: fires both simultaneously.
  *
- * Failure: drains 10 prayer points, disables overhead prayers for 3 ticks.
- * Head always attacks off-tick from the body.
+ * Failure drains 10 prayer pts and disables overheads for 3 ticks.
+ * Always off-tick from the body — flickable.
  */
 export class VardorvisHead extends Entity {
   attackType: HeadAttackType;
   isAwakened: boolean;
   at50Percent: boolean;
   private spawnTick = 0;
-  private resolved = false;
+  private resolved  = false;
+  private bobOffset = 0;
 
-  static readonly PRAYER_DRAIN = 10;
+  static readonly PRAYER_DRAIN         = 10;
   static readonly PRAYER_DISABLE_TICKS = 3;
 
   constructor(region, location, options: HeadOptions) {
     super(region, location);
-    this.attackType = options.attackType;
-    this.isAwakened = options.isAwakened ?? false;
+    this.attackType  = options.attackType;
+    this.isAwakened  = options.isAwakened  ?? false;
     this.at50Percent = options.at50Percent ?? false;
   }
 
-  entityName() { return "VardorvisHead"; }
-  get size() { return 1; }
-  get color() { return "#441010"; }
+  entityName()    { return "VardorvisHead"; }
+  get size()      { return 1; }
+  get color()     { return "#441010"; }
   shouldDestroy() { return this.resolved; }
   get animationIndex() { return 0; }
 
@@ -51,7 +51,7 @@ export class VardorvisHead extends Entity {
 
   tick() {
     this.spawnTick++;
-    // Projectile lands after 3 ticks
+    this.bobOffset = Math.sin(this.spawnTick * 0.8) * 3;
     if (this.spawnTick >= 3 && !this.resolved) {
       this.resolveAttack();
     }
@@ -62,16 +62,10 @@ export class VardorvisHead extends Entity {
     const player = Trainer.player;
     if (!player) return;
 
-    this.requiredPrayers.forEach((requiredPrayer) => {
-      // Use SDK's prayerController to check if correct overhead is active
-      const prayerActive = player.prayerController?.matchFeature(requiredPrayer);
-      const blocked = !!prayerActive;
-
+    this.requiredPrayers.forEach(req => {
+      const blocked = !!player.prayerController?.matchFeature(req);
       if (!blocked) {
-        // Drain 10 prayer points
         player.currentStats.prayer = Math.max(0, player.currentStats.prayer - VardorvisHead.PRAYER_DRAIN);
-        // Disable overhead prayers for 3 ticks by deactivating all prayers briefly
-        // The prayerController handles re-enable on next tick
         player.prayerController?.deactivateAll(player);
       }
     });
@@ -85,53 +79,63 @@ export class VardorvisHead extends Entity {
   getPerceivedRotation(tickPercent?: number) { return 0; }
   getTrueLocation() { return this.location; }
 
+  // 3D placeholder
+  create3dModel(): Model { return BasicModel.forRenderable(this); }
+
   draw(tickPercent: number, context: OffscreenCanvasRenderingContext2D) {}
 
-  drawUnderTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {
-    const progress = Math.min(1, (this.spawnTick + tickPercent) / 3);
-    const x = this.location.x * scale;
-    const y = this.location.y * scale;
+  drawOverTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {
+    const progress  = Math.min(1, (this.spawnTick + tickPercent) / 3);
+    const alpha     = Math.min(1, progress * 2);
+    const isBlue    = this.attackType === "blue";
+    const isBoth    = this.at50Percent && this.isAwakened;
 
-    const eyeColor = this.attackType === "blue" ? "#4488ff" : "#00ff88";
-    const glowColor = this.attackType === "blue" ? "rgba(68,136,255," : "rgba(0,255,136,";
+    const cx = this.location.x * scale + scale / 2;
+    const cy = this.location.y * scale + scale / 2 + this.bobOffset * progress;
+    const r  = scale * 0.42;
 
-    // Glow aura
-    const pulseAlpha = 0.15 + 0.1 * Math.sin(progress * Math.PI * 6);
-    context.fillStyle = glowColor + pulseAlpha + ")";
-    context.beginPath();
-    context.arc(x + scale * 0.5, y + scale * 0.5, scale * 0.6, 0, Math.PI * 2);
-    context.fill();
-
-    // Head silhouette
     context.save();
-    context.globalAlpha = Math.min(1, progress * 2);
-    context.fillStyle = "#441010";
+    context.globalAlpha = alpha;
+
+    // Outer glow
+    const glowCol = isBoth ? "rgba(140,100,255," : isBlue ? "rgba(68,136,255," : "rgba(0,220,100,";
+    context.fillStyle = glowCol + (0.2 + 0.1 * Math.sin(progress * Math.PI * 6)) + ")";
     context.beginPath();
-    context.roundRect(x + scale * 0.1, y + scale * 0.15, scale * 0.8, scale * 0.65, 4);
+    context.arc(cx, cy, r * 1.2, 0, Math.PI * 2);
     context.fill();
+
+    // Head shape
+    context.fillStyle = "#441010";
     context.strokeStyle = "#8a2010";
-    context.lineWidth = 1;
+    context.lineWidth = 1.5;
+    context.beginPath();
+    context.roundRect(cx - r * 0.9, cy - r * 0.7, r * 1.8, r * 1.4, 6);
+    context.fill();
     context.stroke();
 
     // Eyes
-    const eyePulse = 0.5 + 0.5 * Math.sin(progress * Math.PI * 8);
-    context.fillStyle = eyeColor;
-    context.globalAlpha = Math.min(1, progress * 2) * eyePulse;
-    context.beginPath();
-    context.ellipse(x + scale * 0.33, y + scale * 0.43, scale * 0.1, scale * 0.07, -0.2, 0, Math.PI * 2);
-    context.fill();
-    context.beginPath();
-    context.ellipse(x + scale * 0.67, y + scale * 0.43, scale * 0.1, scale * 0.07, 0.2, 0, Math.PI * 2);
-    context.fill();
+    const eyePulse  = 0.6 + 0.4 * Math.sin(progress * Math.PI * 8);
+    const leftCol   = isBoth ? "#aa66ff" : isBlue ? "#4488ff" : "#00ff88";
+    const rightCol  = isBoth ? "#4488ff" : leftCol;
 
-    // Label
-    context.globalAlpha = Math.min(1, progress * 2);
-    context.fillStyle = eyeColor;
-    context.font = `bold ${Math.max(8, Math.floor(scale * 0.16))}px monospace`;
+    context.globalAlpha = alpha * eyePulse;
+    [[cx - r * 0.38, cy - r * 0.1, leftCol], [cx + r * 0.38, cy - r * 0.1, rightCol]].forEach(([ex, ey, col]) => {
+      context.fillStyle = col as string;
+      context.beginPath();
+      context.ellipse(ex as number, ey as number, r * 0.13, r * 0.09, 0, 0, Math.PI * 2);
+      context.fill();
+    });
+
+    // Prayer label (what to flick to)
+    context.globalAlpha = alpha;
+    const labelCol  = isBoth ? "#bb88ff" : isBlue ? "#88aaff" : "#44ff88";
+    const labelText = isBoth ? "MISSILES + MAGIC" : isBlue ? "PROTECT MAGIC" : "PROTECT MISSILES";
+    context.fillStyle = labelCol;
+    context.font = `bold ${Math.max(8, Math.floor(scale * 0.18))}px monospace`;
     context.textAlign = "center";
-    const label = this.at50Percent ? "BOTH!" : this.attackType === "green" ? "MISSILES" : "MAGIC";
-    context.fillText(label, x + scale * 0.5, y + scale * 0.97);
+    context.fillText(labelText, cx, cy + r * 1.1);
     context.textAlign = "left";
+
     context.restore();
   }
 }

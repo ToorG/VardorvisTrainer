@@ -1,128 +1,112 @@
 "use strict";
 
-import { Entity, Trainer } from "osrs-sdk";
+import { BasicModel, Entity, Model, Trainer } from "osrs-sdk";
 
-/**
- * VardorvisDartingSpike
- *
- * Vardorvis darts around the player 1-3 times, leaving cracks in the ground.
- * After ~2 ticks the cracks erupt into spikes dealing up to 25 damage and
- * HEALING Vardorvis for 50% of the damage dealt.
- *
- * Standing near arena edges (by tendrils) minimises cracks spawned.
- * The first crack ALWAYS spawns under the player unless they stand near the edge.
- */
 export class VardorvisSpike extends Entity {
-  private spawnTick = 0;
-  private erupted = false;
-  private readonly eruptTick = 2;
-  private readonly removeTick = 5;
+  private spawnTick  = 0;
+  private erupted    = false;
+  private readonly eruptAt  = 2;
+  private readonly removeAt = 5;
   private vardorvisRef: any;
-
-  readonly MAX_DAMAGE = 25;
 
   constructor(region, location, options: { vardorvis?: any } = {}) {
     super(region, location);
     this.vardorvisRef = options.vardorvis;
   }
 
-  entityName() {
-    return "VardorvisSpike";
-  }
-
-  get size() { return 1; }
-  get color() { return "#7733aa"; }
-  shouldDestroy() { return this.spawnTick >= this.removeTick; }
+  entityName()    { return "VardorvisSpike"; }
+  get size()      { return 1; }
+  get color()     { return "#7733aa"; }
+  shouldDestroy() { return this.spawnTick >= this.removeAt; }
   get animationIndex() { return 0; }
 
   tick() {
     this.spawnTick++;
-    if (this.spawnTick >= this.eruptTick && !this.erupted) {
-      this.erupt();
-    }
+    if (this.spawnTick >= this.eruptAt && !this.erupted) this.erupt();
   }
 
   private erupt() {
     this.erupted = true;
     const player = Trainer.player;
     if (!player) return;
-
     if (player.location.x === this.location.x && player.location.y === this.location.y) {
-      const damage = Math.floor(Math.random() * this.MAX_DAMAGE) + 1;
-      // Directly apply damage via currentStats (same pattern as InfernoPillar)
-      player.currentStats.hitpoint = Math.max(0, player.currentStats.hitpoint - damage);
+      const dmg = Math.floor(Math.random() * 25) + 1;
+      player.currentStats.hitpoint = Math.max(0, player.currentStats.hitpoint - dmg);
       player.damageTaken();
-
-      // Vardorvis heals for 50% of damage dealt
       if (this.vardorvisRef) {
-        const healAmount = Math.floor(damage / 2);
         this.vardorvisRef.currentStats.hitpoint = Math.min(
           this.vardorvisRef.stats.hitpoint,
-          this.vardorvisRef.currentStats.hitpoint + healAmount,
+          this.vardorvisRef.currentStats.hitpoint + Math.floor(dmg / 2),
         );
       }
     }
   }
 
-  getPerceivedLocation(tickPercent: number) {
-    return { x: this.location.x, y: this.location.y, z: 0 };
-  }
-
+  getPerceivedLocation(tickPercent: number) { return { x: this.location.x, y: this.location.y, z: 0 }; }
   getPerceivedRotation(tickPercent?: number) { return 0; }
   getTrueLocation() { return this.location; }
-
-  draw(tickPercent: number, context: OffscreenCanvasRenderingContext2D) {
-    // Handled by drawUnderTile in the region's background draw
-  }
+  create3dModel(): Model { return BasicModel.forRenderable(this); }
+  draw(tickPercent: number, context: OffscreenCanvasRenderingContext2D) {}
 
   drawUnderTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {
-    const progress = this.spawnTick / this.removeTick + tickPercent / this.removeTick;
+    const x = this.location.x * scale;
+    const y = this.location.y * scale;
 
     if (!this.erupted) {
-      const crackAlpha = 0.4 + 0.3 * Math.sin(progress * Math.PI * 8);
-      context.strokeStyle = `rgba(140, 60, 200, ${crackAlpha})`;
+      // Warning crack
+      const flicker = 0.4 + 0.35 * Math.sin((this.spawnTick + tickPercent) * Math.PI * 6);
+      context.strokeStyle = `rgba(140, 60, 200, ${flicker})`;
       context.lineWidth = 1.5;
       context.setLineDash([4, 4]);
-      context.strokeRect(
-        this.location.x * scale + 5,
-        this.location.y * scale + 5,
-        scale - 10, scale - 10
-      );
+      context.strokeRect(x + 5, y + 5, scale - 10, scale - 10);
       context.setLineDash([]);
-
-      context.strokeStyle = `rgba(180, 80, 220, ${crackAlpha * 0.7})`;
+      // X marker
+      context.strokeStyle = `rgba(180, 80, 220, ${flicker * 0.7})`;
       context.lineWidth = 1;
       context.beginPath();
-      context.moveTo(this.location.x * scale + 10, this.location.y * scale + 10);
-      context.lineTo(this.location.x * scale + scale - 10, this.location.y * scale + scale - 10);
-      context.moveTo(this.location.x * scale + scale - 10, this.location.y * scale + 10);
-      context.lineTo(this.location.x * scale + 10, this.location.y * scale + scale - 10);
+      context.moveTo(x + 10, y + 10); context.lineTo(x + scale - 10, y + scale - 10);
+      context.moveTo(x + scale - 10, y + 10); context.lineTo(x + 10, y + scale - 10);
       context.stroke();
     } else {
-      const eruptProgress = Math.min(1, (this.spawnTick - this.eruptTick) / (this.removeTick - this.eruptTick));
-      const fadeOut = 1 - eruptProgress;
-      const x = this.location.x * scale;
-      const y = this.location.y * scale;
+      // Erupted spike
+      const age    = this.spawnTick - this.eruptAt + tickPercent;
+      const life   = this.removeAt  - this.eruptAt;
+      const fadeOut = Math.max(0, 1 - age / life);
+      const cx = x + scale / 2;
+      const cy = y + scale / 2;
 
       context.save();
       context.globalAlpha = fadeOut;
 
-      context.fillStyle = "rgba(120, 50, 180, 0.3)";
+      // Shadow
+      context.fillStyle = "rgba(80, 30, 120, 0.4)";
       context.beginPath();
-      context.ellipse(x + scale * 0.5, y + scale * 0.8, scale * 0.4, scale * 0.12, 0, 0, Math.PI * 2);
+      context.ellipse(cx, cy + scale * 0.25, scale * 0.38, scale * 0.1, 0, 0, Math.PI * 2);
       context.fill();
 
+      // Main spike
       context.fillStyle = "#7733aa";
-      context.beginPath();
-      context.moveTo(x + scale * 0.5, y + scale * 0.08);
-      context.lineTo(x + scale * 0.3, y + scale * 0.75);
-      context.lineTo(x + scale * 0.5, y + scale * 0.6);
-      context.lineTo(x + scale * 0.7, y + scale * 0.75);
-      context.closePath();
-      context.fill();
       context.strokeStyle = "#aa55dd";
       context.lineWidth = 1;
+      context.beginPath();
+      context.moveTo(cx, y + scale * 0.05);
+      context.lineTo(cx - scale * 0.2, y + scale * 0.75);
+      context.lineTo(cx, y + scale * 0.6);
+      context.lineTo(cx + scale * 0.2, y + scale * 0.75);
+      context.closePath();
+      context.fill();
       context.stroke();
+
+      // Side spikes
+      context.fillStyle = "#5522aa";
+      [-0.28, 0.28].forEach(ox => {
+        context.beginPath();
+        context.moveTo(cx + ox * scale, y + scale * 0.25);
+        context.lineTo(cx + (ox - 0.13) * scale, y + scale * 0.65);
+        context.lineTo(cx + (ox + 0.13) * scale, y + scale * 0.65);
+        context.closePath();
+        context.fill();
+      });
 
       context.restore();
     }

@@ -9,7 +9,7 @@ export class SoulreaperAxe extends MeleeWeapon {
   hasSpecialAttack() { return false; }
   get attackRange() { return 1; }
   get attackSpeed() { return 6; }
-  get model(): string { return "https://oldschool-cdn.com/models/player_soul_reaper_axe.glb"; }
+  get model(): string | null { return null; }
   get attackAnimationId(): PlayerAnimationIndices { return PlayerAnimationIndices.ScytheSwing; }
   get idleAnimationId(): PlayerAnimationIndices { return PlayerAnimationIndices.ScytheIdle; }
 }

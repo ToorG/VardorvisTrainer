@@ -16,6 +16,7 @@ import { VardorvisHead } from "./mobs/VardorvisHead";
 import { VardorvisSpike } from "./mobs/VardorvisSpike";
 import { VardorvisStrangle } from "./mobs/VardorvisStrangle";
 import { VardorvisSettings } from "./VardorvisSettings";
+import { VardorvisLoadout } from "./VardorvisLoadout";
 
 import SidebarContent from "../sidebar.html";
 
@@ -117,8 +118,10 @@ export class VardorvisRegion extends Region {
   initialiseRegion() {
     VardorvisSettings.readFromStorage();
 
-    // Create player
-    const player = new Player(this, { x: PLAYER_START_X, y: PLAYER_START_Y });
+    // Create player with Soulreaper Axe + Torva loadout
+    const loadout = new VardorvisLoadout();
+    const player = new Player(this, { x: PLAYER_START_X, y: PLAYER_START_Y }, loadout.getLoadout());
+    loadout.setStats(player);
     this.addPlayer(player);
 
     // Add arena boundary movement blockers (tendril walls — edge tiles)

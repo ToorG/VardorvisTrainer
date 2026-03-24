@@ -2,17 +2,31 @@
 
 import { BasicModel, Entity, Model, Trainer } from "osrs-sdk";
 
+/**
+ * VardorvisStrangle
+ *
+ * Vardorvis binds the player — they CANNOT MOVE until all spores are clicked
+ * or the timer expires.
+ *
+ * - 4-8 spores depending on boss HP (more spores at lower HP)
+ * - Window: 9 ticks normal / 7 ticks awakened
+ * - Failure: up to 80 typeless damage based on spores missed
+ * - The region tracks the active strangle and locks player movement
+ */
 export class VardorvisStrangle extends Entity {
-  private spawnTick    = 0;
+  private spawnTick     = 0;
   private isAwakened: boolean;
   private bossHpPct: number;
-  private sporesCleared = false;
+  sporesCleared         = false;
   private resolved      = false;
   onComplete?: (cleared: boolean) => void;
 
-  get totalDuration() { return this.isAwakened ? 7 : 9; }
+  get totalDuration(): number {
+    return this.isAwakened ? 7 : 9;
+  }
 
-  get sporeCount() {
+  get sporeCount(): number {
+    // 4 spores at full HP, up to 8 at very low HP
     return Math.min(8, 4 + Math.floor((1 - this.bossHpPct) * 4));
   }
 
@@ -28,11 +42,28 @@ export class VardorvisStrangle extends Entity {
   shouldDestroy() { return this.resolved; }
   get animationIndex() { return 0; }
 
-  clearAllSpores() { this.sporesCleared = true; }
+  /** Called by the region's spore UI when the player clicks the last spore */
+  clearAllSpores() {
+    this.sporesCleared = true;
+  }
+
+  /** Remaining ticks before the strangle resolves */
+  get ticksRemaining(): number {
+    return Math.max(0, this.totalDuration - this.spawnTick);
+  }
 
   tick() {
     this.spawnTick++;
-    if (this.spawnTick >= this.totalDuration && !this.resolved) this.resolve();
+
+    // Tick down prayer disable counter on player each tick
+    const player = Trainer.player as any;
+    if (player && player._vardorvisPrayerDisabledTicks > 0) {
+      player._vardorvisPrayerDisabledTicks--;
+    }
+
+    if (this.spawnTick >= this.totalDuration && !this.resolved) {
+      this.resolve();
+    }
   }
 
   private resolve() {
@@ -41,7 +72,8 @@ export class VardorvisStrangle extends Entity {
     if (!player) return;
 
     if (!this.sporesCleared) {
-      const dmg = Math.min(80, this.sporeCount * 9 + Math.floor(Math.random() * 15) + 5);
+      // Damage scales with number of spores missed
+      const dmg = Math.min(80, this.sporeCount * 9 + Math.floor(Math.random() * 16) + 5);
       player.currentStats.hitpoint = Math.max(0, player.currentStats.hitpoint - dmg);
       player.damageTaken();
     }
@@ -63,19 +95,21 @@ export class VardorvisStrangle extends Entity {
     const x = this.location.x * scale;
     const y = this.location.y * scale;
 
-    // Pulsing vine border
-    const pulse = 0.5 + 0.4 * Math.sin((this.spawnTick + tickPercent) * Math.PI * 3);
+    // Pulsing vine border — gets more urgent as timer runs out
+    const pulse = 0.5 + 0.45 * Math.sin((this.spawnTick + tickPercent) * Math.PI * 3.5);
     context.strokeStyle = `rgba(40, 180, 40, ${urgency * pulse})`;
     context.lineWidth = 2;
     context.setLineDash([5, 3]);
     context.strokeRect(x + 2, y + 2, scale - 4, scale - 4);
     context.setLineDash([]);
 
-    // Countdown bar
+    // Countdown bar — green → yellow → red
     const remaining = 1 - progress;
-    context.fillStyle = "#222";
-    context.fillRect(x + 4, y + scale - 8, scale - 8, 4);
-    context.fillStyle = progress < 0.5 ? "#44aa44" : progress < 0.75 ? "#aaaa22" : "#cc2222";
-    context.fillRect(x + 4, y + scale - 8, (scale - 8) * remaining, 4);
+    context.fillStyle = "#111";
+    context.fillRect(x + 3, y + scale - 7, scale - 6, 4);
+    context.fillStyle = progress < 0.5 ? "#44bb44"
+                      : progress < 0.75 ? "#bbbb22"
+                      : "#cc2222";
+    context.fillRect(x + 3, y + scale - 7, (scale - 6) * remaining, 4);
   }
 }

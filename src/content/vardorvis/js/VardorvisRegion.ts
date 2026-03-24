@@ -178,6 +178,24 @@ export class VardorvisRegion extends Region {
     // Scale boss stats with HP
     this.vardorvis.scaleStats();
 
+    // --- Tick down prayer-disabled counter on player ---
+    const player = Trainer.player as any;
+    if (player && player._vardorvisPrayerDisabledTicks > 0) {
+      player._vardorvisPrayerDisabledTicks--;
+    }
+
+    // --- Check axe collisions this tick ---
+    const activeAxes = this.mobs.filter(m => m.mobName() === "Swinging Axe") as unknown as VardorvisAxe[];
+    activeAxes.forEach(ax => ax.checkHitPlayer());
+
+    // --- Lock player movement during strangle ---
+    if (this.activeStrangle && Trainer.player) {
+      // Force player to stay on current tile — clear any pending movement
+      const p = Trainer.player;
+      p.destinationLocation = { x: p.location.x, y: p.location.y };
+      p.path = [];
+    }
+
     const maxHp = VardorvisSettings.awakened ? VARDORVIS_AWAKENED_HP : VARDORVIS_NORMAL_HP;
     const currentHp = this.vardorvis.currentStats.hitpoint;
     const hpPct = currentHp / maxHp;

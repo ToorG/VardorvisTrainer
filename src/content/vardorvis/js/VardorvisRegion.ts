@@ -17,6 +17,7 @@ import { VardorvisSpike } from "./mobs/VardorvisSpike";
 import { VardorvisStrangle } from "./mobs/VardorvisStrangle";
 import { VardorvisSettings } from "./VardorvisSettings";
 import { VardorvisLoadout } from "./VardorvisLoadout";
+import { VardorvisPlayer } from "./VardorvisPlayer";
 
 import SidebarContent from "../sidebar.html";
 
@@ -120,7 +121,7 @@ export class VardorvisRegion extends Region {
 
     // Create player with Soulreaper Axe + Torva loadout
     const loadout = new VardorvisLoadout();
-    const player = new Player(this, { x: PLAYER_START_X, y: PLAYER_START_Y }, loadout.getLoadout());
+    const player = new VardorvisPlayer(this, { x: PLAYER_START_X, y: PLAYER_START_Y }, loadout.getLoadout());
     loadout.setStats(player);
     this.addPlayer(player);
 

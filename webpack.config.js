@@ -50,6 +50,7 @@ const config = {
         { from: '*.ogg', to: "", context: "node_modules/osrs-sdk/_bundles/", noErrorOnMissing: true },
         { from: `assets/fonts/*.woff`, to: "", context: `src/` },
         { from: `assets/fonts/*.woff2`, to: "", context: `src/` },
+        { from: `assets/models/*.glb`, to: "models/", flatten: true, context: `src/`, noErrorOnMissing: true },
       ],
     }),
     new webpack.EnvironmentPlugin(["COMMIT_REF", "BUILD_DATE", "DEPLOY_URL"]),

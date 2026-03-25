@@ -7,29 +7,36 @@ import {
   Player,
   PrimordialBoots,
   UnitOptions,
+  Assets,
 } from "osrs-sdk";
 
-/**
- * VardorvisLoadout
- *
- * Only includes gear whose 3D models are confirmed working on oldschool-cdn.com.
- * Torva + Soulreaper Axe models require a Referer header from infernotrainer.com
- * to load — will be added once model extraction is complete.
- *
- * Stats/bonuses still reflect full BiS melee setup.
- */
+import { SoulreaperAxe }   from "./equipment/SoulreaperAxe";
+import { TorvaFullHelm }   from "./equipment/TorvaFullHelm";
+import { TorvaPlatebody }  from "./equipment/TorvaPlatebody";
+import { TorvaPlatelegs }  from "./equipment/TorvaPlatelegs";
+import { AmuletOfTorture } from "./equipment/AmuletOfTorture";
+import { UltorRing }       from "./equipment/UltorRing";
+
+// Locally served player models extracted from RuneLite
+// Served from /models/ by webpack CopyPlugin
+export const PlayerModelTorva  = Assets.getAssetUrl("models/player_torva.glb");
+export const PlayerModelTorva2 = Assets.getAssetUrl("models/player_torva_2.glb");
+
 export class VardorvisLoadout {
 
   getLoadout(): UnitOptions {
     return {
       equipment: {
-        // These all load fine from oldschool-cdn.com
+        weapon:   new SoulreaperAxe(),
         offhand:  new AvernicDefender(),
+        helmet:   new TorvaFullHelm(),
+        chest:    new TorvaPlatebody(),
+        legs:     new TorvaPlatelegs(),
+        necklace: new AmuletOfTorture(),
         cape:     new InfernalCape(),
         gloves:   new FerociousGloves(),
         feet:     new PrimordialBoots(),
-        // Torva + Soulreaper Axe + Amulet + Ring models need CDN fix
-        // Will be added back once resolved
+        ring:     new UltorRing(),
       },
     };
   }

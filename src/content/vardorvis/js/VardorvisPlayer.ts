@@ -1,7 +1,7 @@
 "use strict";
 
 import { Player, GLTFModel, Model, Region, Location, UnitOptions } from "osrs-sdk";
-import { PlayerModelTorva } from "./VardorvisLoadout";
+import { PlayerModelSoulreaper } from "./VardorvisLoadout";
 
 /**
  * VardorvisPlayer — extends Player to use locally served OSRS player model
@@ -13,6 +13,6 @@ export class VardorvisPlayer extends Player {
   }
 
   create3dModel(): Model {
-    return GLTFModel.forRenderable(this, PlayerModelTorva, { scale: 1 });
+    return GLTFModel.forRenderable(this, PlayerModelSoulreaper, { scale: 1 });
   }
 }

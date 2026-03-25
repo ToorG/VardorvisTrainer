@@ -107,7 +107,7 @@ export class Vardorvis extends Mob {
 
   // 3D: swap to GLTFModel.forRenderable(this, VardorvisModel) once model files are ready
   create3dModel(): Model {
-    return GLTFModel.forRenderable(this, VardorvisModel, { scale: 1 });
+    return GLTFModel.forRenderable(this, VardorvisModel);
   }
 
   drawUnderTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {

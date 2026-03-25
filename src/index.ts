@@ -25,9 +25,11 @@ VardorvisSettings.readFromStorage();
 // preventing the 232px right-menu offset that breaks the control panel.
 if (window.location.pathname.includes('vardorvis')) {
   Settings.menuVisible = false;
+  Settings.use3dView = true;
   const _origGetItem = localStorage.getItem.bind(localStorage);
   localStorage.getItem = function(key: string) {
     if (key === 'menuVisible') return 'false';
+    if (key === 'use3dView') return 'true';
     return _origGetItem(key);
   };
   const _origSetItem = localStorage.setItem.bind(localStorage);

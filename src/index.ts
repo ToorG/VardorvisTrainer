@@ -32,7 +32,10 @@ const selectedRegion: Region = (regionName in AVAILABLE_REGIONS) ? AVAILABLE_REG
 
 // Create world
 const world = new World();
-world.getReadyTimer = 6;
+// Only show GET READY for Inferno, not Vardorvis
+if (!window.location.pathname.includes('vardorvis')) {
+  world.getReadyTimer = 6;
+}
 selectedRegion.world = world;
 world.addRegion(selectedRegion);
 

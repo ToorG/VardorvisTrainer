@@ -16,13 +16,7 @@ import { TorvaPlatelegs }  from "./equipment/TorvaPlatelegs";
 import { AmuletOfTorture } from "./equipment/AmuletOfTorture";
 import { UltorRing }       from "./equipment/UltorRing";
 
-// Locally served player models extracted from RuneLite
-// Served directly from webpack dev server - no CDN dependency
-export const PlayerModelTorva      = "/models/player_torva.glb";
-export const PlayerModelSoulreaper = "/models/player_torva_2.glb";
-
 export class VardorvisLoadout {
-
   getLoadout(): UnitOptions {
     return {
       equipment: {

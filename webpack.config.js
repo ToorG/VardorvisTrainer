@@ -50,8 +50,7 @@ const config = {
         { from: '*.ogg', to: "", context: "node_modules/osrs-sdk/_bundles/", noErrorOnMissing: true },
         { from: `assets/fonts/*.woff`, to: "", context: `src/` },
         { from: `assets/fonts/*.woff2`, to: "", context: `src/` },
-        { from: `assets/models/player_torva.glb`, to: "models/player_torva.glb", context: `src/`, noErrorOnMissing: true },
-        { from: `assets/models/player_torva_2.glb`, to: "models/player_torva_2.glb", context: `src/`, noErrorOnMissing: true },
+
       ],
     }),
     new webpack.EnvironmentPlugin(["COMMIT_REF", "BUILD_DATE", "DEPLOY_URL"]),

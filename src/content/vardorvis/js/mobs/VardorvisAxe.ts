@@ -1,6 +1,6 @@
 "use strict";
 
-import { BasicModel, DelayedAction, Mob, UnitBonuses, Location, Region, Model, Trainer } from "osrs-sdk";
+import { EmptyModel, DelayedAction, Mob, UnitBonuses, Location, Region, Model, Trainer } from "osrs-sdk";
 
 export type AxeDirection = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
 
@@ -66,7 +66,7 @@ export class VardorvisAxe extends Mob {
 
     // Remove after crossing the arena (max 12 tiles at size 9)
     if (this.ticksAlive > 12) {
-      this.dying = 1;
+      this.region.removeMob(this);
       return;
     }
 
@@ -118,9 +118,7 @@ export class VardorvisAxe extends Mob {
     }
   }
 
-  create3dModel(): Model {
-    return BasicModel.forRenderable(this);
-  }
+  create3dModel(): Model { return new EmptyModel(); }
 
   drawUnderTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {
     context.fillStyle = "rgba(204, 74, 26, 0.32)";

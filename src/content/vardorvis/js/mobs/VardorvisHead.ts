@@ -1,6 +1,6 @@
 "use strict";
 
-import { EmptyModel, DelayedAction, Entity, Model, Trainer } from "osrs-sdk";
+import { BasicModel, DelayedAction, Entity, Model, Trainer } from "osrs-sdk";
 
 export type HeadAttackType = "green" | "blue";
 
@@ -99,7 +99,7 @@ export class VardorvisHead extends Entity {
   getPerceivedLocation(tickPercent: number) { return { x: this.location.x, y: this.location.y, z: 0 }; }
   getPerceivedRotation(tickPercent?: number) { return 0; }
   getTrueLocation() { return this.location; }
-  create3dModel(): Model { return new EmptyModel(); }
+  create3dModel(): Model { return BasicModel.forRenderable(this); }
   draw(tickPercent: number, context: OffscreenCanvasRenderingContext2D) {}
 
   drawOverTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {

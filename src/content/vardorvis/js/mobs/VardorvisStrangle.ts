@@ -1,6 +1,8 @@
 "use strict";
 
-import { EmptyModel, Entity, Model, Trainer } from "osrs-sdk";
+import { GLTFModel, Entity, Model, Trainer } from "osrs-sdk";
+
+const TendrilModel = "/models/vardorvis_tendril.glb";
 
 /**
  * VardorvisStrangle
@@ -85,7 +87,7 @@ export class VardorvisStrangle extends Entity {
   getPerceivedLocation(tickPercent: number) { return { x: this.location.x, y: this.location.y, z: 0 }; }
   getPerceivedRotation(tickPercent?: number) { return 0; }
   getTrueLocation() { return this.location; }
-  create3dModel(): Model { return new EmptyModel(); }
+  create3dModel(): Model { return GLTFModel.forRenderable(this, TendrilModel); }
   draw(tickPercent: number, context: OffscreenCanvasRenderingContext2D) {}
 
   drawUnderTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {

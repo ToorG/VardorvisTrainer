@@ -1,6 +1,6 @@
 "use strict";
 
-import { EmptyModel, DelayedAction, Mob, UnitBonuses, Location, Region, Model, Trainer } from "osrs-sdk";
+import { BasicModel, DelayedAction, Mob, UnitBonuses, Location, Region, Model, Trainer } from "osrs-sdk";
 
 export type AxeDirection = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
 
@@ -118,7 +118,7 @@ export class VardorvisAxe extends Mob {
     }
   }
 
-  create3dModel(): Model { return new EmptyModel(); }
+  create3dModel(): Model { return BasicModel.forRenderable(this); }
 
   drawUnderTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {
     context.fillStyle = "rgba(204, 74, 26, 0.32)";

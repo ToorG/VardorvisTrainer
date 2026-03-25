@@ -20,6 +20,23 @@ Settings.readFromStorage();
 InfernoSettings.readFromStorage();
 VardorvisSettings.readFromStorage();
 
+// For Vardorvis, force menuVisible=false permanently.
+// Patch localStorage so the SDK always reads false for menuVisible,
+// preventing the 232px right-menu offset that breaks the control panel.
+if (window.location.pathname.includes('vardorvis')) {
+  Settings.menuVisible = false;
+  const _origGetItem = localStorage.getItem.bind(localStorage);
+  localStorage.getItem = function(key: string) {
+    if (key === 'menuVisible') return 'false';
+    return _origGetItem(key);
+  };
+  const _origSetItem = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function(key: string, value: string) {
+    if (key === 'menuVisible') return;
+    return _origSetItem(key, value);
+  };
+}
+
 // Choose the region based on the URL.
 const AVAILABLE_REGIONS = {
   'inferno.html': new InfernoRegion(),

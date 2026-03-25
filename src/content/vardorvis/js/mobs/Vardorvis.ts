@@ -2,6 +2,7 @@
 
 import {
   BasicModel,
+  GLTFModel,
   DelayedAction,
   Mob,
   MeleeWeapon,
@@ -11,6 +12,8 @@ import {
   UnitBonuses,
   Model,
 } from "osrs-sdk";
+
+const VardorvisModel = "/models/vardorvis.glb";
 
 export const VARDORVIS_NORMAL_HP   = 700;
 export const VARDORVIS_AWAKENED_HP = 1400;
@@ -104,7 +107,7 @@ export class Vardorvis extends Mob {
 
   // 3D: swap to GLTFModel.forRenderable(this, VardorvisModel) once model files are ready
   create3dModel(): Model {
-    return BasicModel.forRenderable(this);
+    return GLTFModel.forRenderable(this, VardorvisModel, { scale: 1 });
   }
 
   drawUnderTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {

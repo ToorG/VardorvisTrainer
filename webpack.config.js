@@ -50,6 +50,8 @@ const config = {
         { from: '*.ogg', to: "", context: "node_modules/osrs-sdk/_bundles/", noErrorOnMissing: true },
         { from: `assets/fonts/*.woff`, to: "", context: `src/` },
         { from: `assets/fonts/*.woff2`, to: "", context: `src/` },
+        { from: `assets/models/vardorvis.glb`, to: "models/vardorvis.glb", context: `src/`, noErrorOnMissing: true },
+        { from: `assets/models/vardorvis_tendril.glb`, to: "models/vardorvis_tendril.glb", context: `src/`, noErrorOnMissing: true },
 
       ],
     }),

@@ -7,7 +7,6 @@ import {
   Player,
   PrimordialBoots,
   UnitOptions,
-  Assets,
 } from "osrs-sdk";
 
 import { SoulreaperAxe }   from "./equipment/SoulreaperAxe";
@@ -18,10 +17,9 @@ import { AmuletOfTorture } from "./equipment/AmuletOfTorture";
 import { UltorRing }       from "./equipment/UltorRing";
 
 // Locally served player models extracted from RuneLite
-// player_torva.glb   = Player 8ulks (Torva armour)
-// player_torva_2.glb = Player Mr Ego (Oathplate + Soulreaper Axe)
-export const PlayerModelTorva      = Assets.getAssetUrl("models/player_torva.glb");
-export const PlayerModelSoulreaper = Assets.getAssetUrl("models/player_torva_2.glb");
+// Served directly from webpack dev server - no CDN dependency
+export const PlayerModelTorva      = "/models/player_torva.glb";
+export const PlayerModelSoulreaper = "/models/player_torva_2.glb";
 
 export class VardorvisLoadout {
 

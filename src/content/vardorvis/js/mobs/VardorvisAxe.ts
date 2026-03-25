@@ -1,6 +1,6 @@
 "use strict";
 
-import { BasicModel, DelayedAction, Mob, MeleeWeapon, UnitBonuses, Location, Region, Model, Trainer } from "osrs-sdk";
+import { BasicModel, DelayedAction, Mob, UnitBonuses, Location, Region, Model, Trainer } from "osrs-sdk";
 
 export type AxeDirection = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
 
@@ -15,23 +15,14 @@ const DIR_VECTORS: Record<AxeDirection, { dx: number; dy: number }> = {
   SW: { dx: -1, dy: -1 },
 };
 
-/**
- * VardorvisAxe
- *
- * Travels one tile per tick across the arena.
- * On hit:
- *   - Deals 5-35 base damage (halved by Protect from Melee)
- *   - Applies bleed: 3 dmg × 5 ticks (awakened: 5 dmg × 5 ticks), every 2 ticks
- *
- * Awakened middle-lane axes have an extended hitbox (+1 perpendicular tile).
- */
 export class VardorvisAxe extends Mob {
   direction: AxeDirection;
   dx: number;
   dy: number;
   isAwakened: boolean;
-  private spinAngle: number;
   alreadyHit = false;
+  private spinAngle: number;
+  private ticksAlive = 0;
 
   constructor(region: Region, location: Location, options: { direction: AxeDirection; awakened?: boolean; aggro?: any }) {
     super(region, location, options);
@@ -51,22 +42,8 @@ export class VardorvisAxe extends Mob {
   get color() { return "#cc4422"; }
   attackStyleForNewAttack() { return "slash"; }
 
-  // Hide HP bar — axes don't show health
-  get currentHp() { return 0; }
-  get maxHp()     { return 0; }
-
-  movementStep() {
-    // Move one tile per tick in the axe's direction
-    const newX = this.location.x + this.dx;
-    const newY = this.location.y + this.dy;
-    this.location = { x: newX, y: newY };
-    this.perceivedLocation = { ...this.location };
-
-    // Remove axe when it exits the arena bounds
-    if (newX < 0 || newX > 100 || newY < 0 || newY > 100) {
-      this.dying = 1;
-    }
-  }
+  // Hide HP bar
+  get hitpoints() { return 0; }
 
   setStats() {
     this.stats = { attack: 0, strength: 0, defence: 0, range: 0, magic: 0, hitpoint: 1 };
@@ -81,15 +58,20 @@ export class VardorvisAxe extends Mob {
     };
   }
 
-  /** Extended hitbox tile for middle-lane awakened axes */
-  get extendedHitboxTile(): Location | null {
-    if (!this.isAwakened) return null;
-    const { x, y } = this.location;
-    // Middle columns/rows have the extended hitbox
-    if (x >= 2 && x <= 6 && y >= 2 && y <= 6) {
-      return { x: x + this.dy, y: y + this.dx };
+  /** Called from VardorvisRegion.postTick() each tick to move the axe */
+  moveAxe() {
+    this.ticksAlive++;
+    const newX = this.location.x + this.dx;
+    const newY = this.location.y + this.dy;
+
+    // Remove after crossing the arena (max 12 tiles at size 9)
+    if (this.ticksAlive > 12) {
+      this.dying = 1;
+      return;
     }
-    return null;
+
+    this.location = { x: newX, y: newY };
+    this.perceivedLocation = { x: newX, y: newY };
   }
 
   hitsLocation(loc: Location): boolean {
@@ -98,29 +80,31 @@ export class VardorvisAxe extends Mob {
     return !!(ext && ext.x === loc.x && ext.y === loc.y);
   }
 
-  /**
-   * Check if the axe hits the player this tick and apply damage + bleed.
-   * Called from VardorvisRegion.postTick() after moving the axe.
-   */
+  get extendedHitboxTile(): Location | null {
+    if (!this.isAwakened) return null;
+    const { x, y } = this.location;
+    if (x >= 2 && x <= 6 && y >= 2 && y <= 6) {
+      return { x: x + this.dy, y: y + this.dx };
+    }
+    return null;
+  }
+
   checkHitPlayer() {
     if (this.alreadyHit) return;
     const player = Trainer.player;
     if (!player) return;
-
     if (!this.hitsLocation(player.location)) return;
-    this.alreadyHit = true;
 
-    // Base hit: 5-35, halved by Protect from Melee
+    this.alreadyHit = true;
     const hasMelee = !!player.prayerController?.matchFeature("melee");
-    const base     = 5 + Math.floor(Math.random() * 31);
-    const hit      = hasMelee ? Math.floor(base * 0.5) : base;
+    const base = 5 + Math.floor(Math.random() * 31);
+    const hit  = hasMelee ? Math.floor(base * 0.5) : base;
 
     if (hit > 0) {
       player.currentStats.hitpoint = Math.max(0, player.currentStats.hitpoint - hit);
       player.damageTaken();
     }
 
-    // Apply bleed: ticks 2, 4, 6, 8, 10 after hit
     const bleedDmg = this.isAwakened ? 5 : 3;
     for (let i = 1; i <= 5; i++) {
       DelayedAction.registerDelayedAction(
@@ -134,29 +118,17 @@ export class VardorvisAxe extends Mob {
     }
   }
 
-  // 3D: swap to GLTFModel.forRenderable(this, VardorvisAxeModel) once files ready
   create3dModel(): Model {
     return BasicModel.forRenderable(this);
   }
 
   drawUnderTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {
-    // Danger tile highlight
     context.fillStyle = "rgba(204, 74, 26, 0.32)";
     context.fillRect(this.location.x * scale + 1, this.location.y * scale + 1, scale - 2, scale - 2);
-
-    // Extended hitbox dashed outline (awakened)
-    const ext = this.extendedHitboxTile;
-    if (ext && ext.x >= 0 && ext.x < 9 && ext.y >= 0 && ext.y < 9) {
-      context.strokeStyle = "rgba(255, 140, 60, 0.65)";
-      context.lineWidth = 1;
-      context.setLineDash([3, 3]);
-      context.strokeRect(ext.x * scale + 3, ext.y * scale + 3, scale - 6, scale - 6);
-      context.setLineDash([]);
-    }
   }
 
   drawOverTile(tickPercent: number, context: OffscreenCanvasRenderingContext2D, scale: number) {
-    this.spinAngle += tickPercent * 0.45;
+    this.spinAngle += 0.2;
     const cx = this.location.x * scale + scale / 2;
     const cy = this.location.y * scale + scale / 2;
     const r  = scale * 0.37;
@@ -165,7 +137,6 @@ export class VardorvisAxe extends Mob {
     context.translate(cx, cy);
     context.rotate(this.spinAngle + Math.atan2(this.dy, this.dx));
 
-    // Handle
     context.strokeStyle = "#5a3311";
     context.lineWidth = Math.max(3, scale * 0.07);
     context.lineCap = "round";
@@ -174,7 +145,6 @@ export class VardorvisAxe extends Mob {
     context.lineTo(r * 0.95, 0);
     context.stroke();
 
-    // Left blade
     context.fillStyle = "#8a2000";
     context.strokeStyle = "#cc5533";
     context.lineWidth = 1;
@@ -185,7 +155,6 @@ export class VardorvisAxe extends Mob {
     context.closePath();
     context.fill(); context.stroke();
 
-    // Right blade
     context.beginPath();
     context.moveTo(r * 0.65, 0);
     context.lineTo(r * 1.1,  -r * 0.58);
@@ -193,7 +162,6 @@ export class VardorvisAxe extends Mob {
     context.closePath();
     context.fill(); context.stroke();
 
-    // Rivet
     context.fillStyle = "#ff8844";
     context.beginPath();
     context.arc(0, 0, r * 0.11, 0, Math.PI * 2);

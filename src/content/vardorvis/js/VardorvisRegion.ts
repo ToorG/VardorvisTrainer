@@ -190,6 +190,8 @@ export class VardorvisRegion extends Region {
 
     // --- Check axe collisions this tick ---
     const activeAxes = this.mobs.filter(m => m.mobName() === "Swinging Axe") as unknown as VardorvisAxe[];
+    // Move axes first, then check hits
+    activeAxes.forEach(ax => ax.moveAxe());
     activeAxes.forEach(ax => ax.checkHitPlayer());
 
     // --- Lock player movement during strangle ---

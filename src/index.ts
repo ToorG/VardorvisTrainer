@@ -20,6 +20,13 @@ Settings.readFromStorage();
 InfernoSettings.readFromStorage();
 VardorvisSettings.readFromStorage();
 
+// Cap the reported window width so the SDK renders correctly on wide monitors
+const _origChromeSize = Chrome.size.bind(Chrome);
+(Chrome as any).size = function() {
+  const s = _origChromeSize();
+  return { width: Math.min(s.width, 1280), height: s.height };
+};
+
 // Choose the region based on the URL.
 const AVAILABLE_REGIONS = {
   'inferno.html': new InfernoRegion(),

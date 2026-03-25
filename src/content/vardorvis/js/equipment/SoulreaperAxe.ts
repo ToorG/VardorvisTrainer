@@ -2,8 +2,6 @@
 import { MeleeWeapon, ItemName } from "osrs-sdk";
 import { PlayerAnimationIndices } from "osrs-sdk";
 
-// Soulreaper Axe model not available on CDN - using Blade of Saeldor model
-// Stats still reflect Soulreaper Axe
 export class SoulreaperAxe extends MeleeWeapon {
   get itemName(): ItemName { return "Soulreaper Axe" as ItemName; }
   get weight() { return 0; }

@@ -20,25 +20,6 @@ Settings.readFromStorage();
 InfernoSettings.readFromStorage();
 VardorvisSettings.readFromStorage();
 
-// Cap window.innerWidth at 1280px so the SDK always renders
-// at the correct size regardless of monitor width.
-// This prevents the control panel tabs from causing layout glitches.
-const MAX_GAME_WIDTH = 1280;
-if (window.innerWidth > MAX_GAME_WIDTH) {
-  Object.defineProperty(window, 'innerWidth', {
-    get: () => MAX_GAME_WIDTH,
-    configurable: true,
-  });
-  Object.defineProperty(document.documentElement, 'clientWidth', {
-    get: () => MAX_GAME_WIDTH,
-    configurable: true,
-  });
-  Object.defineProperty(document.body, 'clientWidth', {
-    get: () => MAX_GAME_WIDTH,
-    configurable: true,
-  });
-}
-
 // Choose the region based on the URL.
 const AVAILABLE_REGIONS = {
   'inferno.html': new InfernoRegion(),
